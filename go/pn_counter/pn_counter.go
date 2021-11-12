@@ -4,6 +4,8 @@ import (
 	pb "github.com/isaacd9/proto-crdt/pb/v1"
 )
 
+type Counter = pb.PNCounter
+
 func New(id string) *pb.PNCounter {
 	return &pb.PNCounter{
 		Identifier: id,
@@ -20,13 +22,13 @@ func Decrement(p *pb.PNCounter, n uint64) {
 	p.Decrements[p.Identifier] += n
 }
 
-func Value(p *pb.PNCounter) uint64 {
-	var t uint64
+func Value(p *pb.PNCounter) int64 {
+	var t int64
 	for _, c := range p.Increments {
-		t += c
+		t += int64(c)
 	}
 	for _, c := range p.Decrements {
-		t -= c
+		t -= int64(c)
 	}
 	return t
 }

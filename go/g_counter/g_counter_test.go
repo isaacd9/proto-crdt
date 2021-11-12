@@ -10,7 +10,7 @@ func TestGCounter(t *testing.T) {
 	tests := []struct {
 		aIncs  []uint64
 		bIncs  []uint64
-		result int64
+		result uint64
 	}{
 		{
 			aIncs:  []uint64{10, 50, 100},
@@ -46,6 +46,6 @@ func TestGCounter(t *testing.T) {
 			Increment(b, inc)
 		}
 
-		require.Equal(t, test.result, Count(Merge("a", a, b)))
+		require.Equal(t, test.result, Value(Merge("a", a, b)))
 	}
 }
