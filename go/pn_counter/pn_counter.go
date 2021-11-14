@@ -4,8 +4,6 @@ import (
 	pb "github.com/isaacd9/proto-crdt/pb/v1"
 )
 
-type Counter = pb.PNCounter
-
 func New(id string) *pb.PNCounter {
 	return &pb.PNCounter{
 		Identifier: id,
