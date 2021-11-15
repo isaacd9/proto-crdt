@@ -83,3 +83,4 @@ func Merge(sets ...*pb.GSet) (*pb.GSet, error) {
 		}
 	}
 	return c, nil
+}
