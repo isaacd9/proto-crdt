@@ -1,3 +1,4 @@
+use crate::pb;
 use std::{collections::HashMap, iter};
 
 pub trait GCounterExt {
@@ -7,10 +8,6 @@ pub trait GCounterExt {
     fn increment(&mut self, n: u64);
     fn value(&self) -> u64;
     fn merge(id: &'static str, a: &Self::T, b: &Self::T) -> Self::T;
-}
-
-pub mod pb {
-    include!(concat!(env!("OUT_DIR"), "/pb_crdt.v1.rs"));
 }
 
 impl GCounterExt for pb::GCounter {
