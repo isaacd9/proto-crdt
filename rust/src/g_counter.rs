@@ -1,14 +1,5 @@
-use crate::pb;
+use crate::{pb, GCounterExt, MergeExt};
 use std::{collections::HashMap, iter};
-
-pub trait GCounterExt {
-    type T;
-
-    fn new(id: &'static str) -> Self::T;
-    fn increment(&mut self, n: u64);
-    fn value(&self) -> u64;
-    fn merge(id: &'static str, a: &Self::T, b: &Self::T) -> Self::T;
-}
 
 impl GCounterExt for pb::GCounter {
     type T = pb::GCounter;
@@ -34,6 +25,10 @@ impl GCounterExt for pb::GCounter {
         }
         sum
     }
+}
+
+impl MergeExt for pb::GCounter {
+    type T = pb::GCounter;
 
     fn merge(id: &'static str, a: &pb::GCounter, b: &pb::GCounter) -> pb::GCounter {
         let mut c = Self::new(id);

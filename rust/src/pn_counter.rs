@@ -1,11 +1,5 @@
-use crate::{g_counter::GCounterExt, pb};
+use crate::{pb, GCounterExt, MergeExt, PNCounterExt};
 use std::{collections::HashMap, iter};
-
-pub trait PNCounterExt {
-    type T;
-
-    fn decrement(&mut self, n: u64);
-}
 
 impl GCounterExt for pb::PnCounter {
     type T = pb::PnCounter;
@@ -35,6 +29,10 @@ impl GCounterExt for pb::PnCounter {
         }
         sum
     }
+}
+
+impl MergeExt for pb::PnCounter {
+    type T = pb::PnCounter;
 
     fn merge(id: &'static str, a: &pb::PnCounter, b: &pb::PnCounter) -> pb::PnCounter {
         let mut c = Self::new(id);
@@ -70,5 +68,27 @@ impl PNCounterExt for pb::PnCounter {
             .entry(self.identifier.to_string())
             .and_modify(|v| *v += n)
             .or_insert(n);
+    }
+}
+
+mod tests {
+    #[test]
+    fn test_pn_counter() {
+        use super::*;
+        use pb::PnCounter;
+
+        let mut a = PnCounter::new("a");
+        let mut b = PnCounter::new("b");
+        a.increment(100);
+        b.increment(200);
+
+        a.decrement(50);
+        b.decrement(30);
+
+        let mut c = PnCounter::merge("c", &a, &b);
+        assert_eq!(c.value(), 220);
+
+        c.increment(50);
+        assert_eq!(c.value(), 270);
     }
 }
