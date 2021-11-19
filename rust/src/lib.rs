@@ -38,7 +38,7 @@ pub trait GSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
 
     fn elements(&self) -> Result<HashSet<E>, prost::DecodeError>;
 
-    fn merge<A, B>(a: A, b: B) -> Self::T
+    fn merge<A, B>(a: A, b: B) -> Result<Self::T, prost::DecodeError>
     where
         A: GSetExt<E, T = Self::T>,
         B: GSetExt<E, T = Self::T>;
