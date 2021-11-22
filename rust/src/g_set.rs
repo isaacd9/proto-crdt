@@ -93,13 +93,35 @@ mod tests {
         use super::*;
         use pb::GSet;
 
-        let mut a = GSet::new::<Vec<MyProto>>(vec![]);
-        // let mut _b = GSet::new::<Vec<MyProto>>(vec![]);
+        let mut a: <GSet as GSetExt<MyProto>>::T = GSet::new::<Vec<MyProto>>(vec![]);
 
         a.insert(MyProto {
             value: "hello world".to_string(),
         });
 
         assert_eq!(1, <GSet as GSetExt<MyProto>>::len(&a));
+
+        assert!(a.contains(MyProto {
+            value: "hello world".to_string()
+        }));
+        assert!(!a.contains(MyProto {
+            value: "bang".to_string()
+        }));
+
+        a.insert(MyProto {
+            value: "bang".to_string(),
+        });
+        assert_eq!(2, <GSet as GSetExt<MyProto>>::len(&a));
+        assert!(a.contains(MyProto {
+            value: "bang".to_string()
+        }));
+
+        let set = <GSet as GSetExt<MyProto>>::elements(&a).unwrap();
+        assert!(set.contains(&MyProto {
+            value: "hello world".to_string(),
+        }));
+        assert!(set.contains(&MyProto {
+            value: "bang".to_string(),
+        }));
     }
 }
