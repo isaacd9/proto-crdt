@@ -6,7 +6,7 @@ use std::hash::Hash;
 impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> GSetExt<E> for pb::GSet {
     type T = pb::GSet;
 
-    fn new<I, R>(elements: I) -> Self::T
+    fn new<I>(elements: I) -> Self::T
     where
         I: IntoIterator<Item = E>,
     {
@@ -93,7 +93,7 @@ mod tests {
         use super::*;
         use pb::GSet;
 
-        let mut a = GSet::new::<Vec<MyProto>, pb::GSet>(vec![]);
+        let mut a = GSet::new::<Vec<MyProto>>(vec![]);
         // let mut _b = GSet::new::<Vec<MyProto>>(vec![]);
 
         a.insert(MyProto {

@@ -27,7 +27,7 @@ pub trait ProstMessageExt {
 pub trait GSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
     type T;
 
-    fn new<I, R>(elements: I) -> Self::T
+    fn new<I>(elements: I) -> Self::T
     where
         I: IntoIterator<Item = E>;
 
