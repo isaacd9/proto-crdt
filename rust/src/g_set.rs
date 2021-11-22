@@ -6,7 +6,7 @@ use std::hash::Hash;
 impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> GSetExt<E> for pb::GSet {
     type T = pb::GSet;
 
-    fn new<I>(elements: I) -> pb::GSet
+    fn new<I, R>(elements: I) -> Self::T
     where
         I: IntoIterator<Item = E>,
     {
@@ -70,5 +70,36 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> GSetExt<E> for p
         }
 
         Ok(c)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[derive(Hash, Clone, PartialEq, Eq, ::prost::Message)]
+    pub struct MyProto {
+        /// Identifier is a unique identifier for this replica
+        #[prost(string, tag = "1")]
+        pub value: ::prost::alloc::string::String,
+    }
+
+    impl crate::ProstMessageExt for MyProto {
+        fn type_url() -> String {
+            "type".to_string()
+        }
+    }
+
+    #[test]
+    fn test_g_set() {
+        use super::*;
+        use pb::GSet;
+
+        let mut a = GSet::new::<Vec<MyProto>, pb::GSet>(vec![]);
+        // let mut _b = GSet::new::<Vec<MyProto>>(vec![]);
+
+        a.insert(MyProto {
+            value: "hello world".to_string(),
+        });
+
+        assert_eq!(1, <GSet as GSetExt<MyProto>>::len(&a));
     }
 }

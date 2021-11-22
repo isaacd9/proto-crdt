@@ -1,4 +1,3 @@
-use prost::Message;
 use std::collections::HashSet;
 use std::hash::Hash;
 
@@ -22,13 +21,13 @@ pub trait PNCounterExt {
 }
 
 pub trait ProstMessageExt {
-    fn type_url<T: AsRef<str>>() -> T;
+    fn type_url() -> String;
 }
 
 pub trait GSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
     type T;
 
-    fn new<I>(elements: I) -> Self::T
+    fn new<I, R>(elements: I) -> Self::T
     where
         I: IntoIterator<Item = E>;
 
