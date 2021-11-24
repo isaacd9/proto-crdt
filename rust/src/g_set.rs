@@ -23,7 +23,7 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> GSetExt<E> for p
         }
     }
 
-    fn insert(&mut self, element: E) {
+    fn insert(&mut self, element: &E) {
         let encoded = prost_types::Any {
             type_url: E::type_url(),
             value: element.encode_to_vec(),
@@ -34,7 +34,7 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> GSetExt<E> for p
         }
     }
 
-    fn contains(&self, element: E) -> bool {
+    fn contains(&self, element: &E) -> bool {
         let encoded = prost_types::Any {
             type_url: E::type_url(),
             value: element.encode_to_vec(),
@@ -54,7 +54,7 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> GSetExt<E> for p
             .collect()
     }
 
-    fn merge<A, B>(a: A, b: B) -> Result<pb::GSet, prost::DecodeError>
+    fn merge<A, B>(a: &A, b: &B) -> Result<pb::GSet, prost::DecodeError>
     where
         A: GSetExt<E, T = Self::T>,
         B: GSetExt<E, T = Self::T>,
@@ -62,11 +62,11 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> GSetExt<E> for p
         let mut c = pb::GSet::default();
 
         for a_el in a.elements()?.into_iter() {
-            c.insert(a_el)
+            c.insert(&a_el)
         }
 
         for b_el in b.elements()?.into_iter() {
-            c.insert(b_el)
+            c.insert(&b_el)
         }
 
         Ok(c)
@@ -95,24 +95,24 @@ mod tests {
 
         let mut a: <GSet as GSetExt<MyProto>>::T = GSet::new::<Vec<MyProto>>(vec![]);
 
-        a.insert(MyProto {
+        a.insert(&MyProto {
             value: "hello world".to_string(),
         });
 
         assert_eq!(1, <GSet as GSetExt<MyProto>>::len(&a));
 
-        assert!(a.contains(MyProto {
+        assert!(a.contains(&MyProto {
             value: "hello world".to_string()
         }));
-        assert!(!a.contains(MyProto {
+        assert!(!a.contains(&MyProto {
             value: "bang".to_string()
         }));
 
-        a.insert(MyProto {
+        a.insert(&MyProto {
             value: "bang".to_string(),
         });
         assert_eq!(2, <GSet as GSetExt<MyProto>>::len(&a));
-        assert!(a.contains(MyProto {
+        assert!(a.contains(&MyProto {
             value: "bang".to_string()
         }));
 

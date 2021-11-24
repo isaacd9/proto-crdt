@@ -31,13 +31,13 @@ pub trait GSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
     where
         I: IntoIterator<Item = E>;
 
-    fn insert(&mut self, element: E);
-    fn contains(&self, element: E) -> bool;
+    fn insert(&mut self, element: &E);
+    fn contains(&self, element: &E) -> bool;
     fn len(&self) -> usize;
 
     fn elements(&self) -> Result<HashSet<E>, prost::DecodeError>;
 
-    fn merge<A, B>(a: A, b: B) -> Result<Self::T, prost::DecodeError>
+    fn merge<A, B>(a: &A, b: &B) -> Result<Self::T, prost::DecodeError>
     where
         A: GSetExt<E, T = Self::T>,
         B: GSetExt<E, T = Self::T>;
