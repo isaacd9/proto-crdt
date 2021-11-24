@@ -39,8 +39,8 @@ pub trait GSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
 
     fn merge<A, B>(a: &A, b: &B) -> Result<Self::T, prost::DecodeError>
     where
-        A: GSetExt<E, T = Self::T>,
-        B: GSetExt<E, T = Self::T>;
+        A: GSetExt<E>,
+        B: GSetExt<E>;
 }
 
 pub mod g_counter;

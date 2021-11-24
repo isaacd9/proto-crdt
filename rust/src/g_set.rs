@@ -54,10 +54,10 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> GSetExt<E> for p
             .collect()
     }
 
-    fn merge<A, B>(a: &A, b: &B) -> Result<pb::GSet, prost::DecodeError>
+    fn merge<A, B>(a: &A, b: &B) -> Result<Self::T, prost::DecodeError>
     where
-        A: GSetExt<E, T = Self::T>,
-        B: GSetExt<E, T = Self::T>,
+        A: GSetExt<E>,
+        B: GSetExt<E>,
     {
         let mut c = pb::GSet::default();
 
@@ -116,12 +116,48 @@ mod tests {
             value: "bang".to_string()
         }));
 
-        let set = <GSet as GSetExt<MyProto>>::elements(&a).unwrap();
+        let set: HashSet<MyProto> = a.elements().unwrap();
         assert!(set.contains(&MyProto {
             value: "hello world".to_string(),
         }));
         assert!(set.contains(&MyProto {
             value: "bang".to_string(),
         }));
+    }
+
+    #[test]
+    fn test_merge() {
+        use super::*;
+        use pb::GSet;
+
+        let a = GSet::new::<Vec<MyProto>>(vec![
+            MyProto {
+                value: "hello".to_string(),
+            },
+            MyProto {
+                value: "bang".to_string(),
+            },
+        ]);
+        let b = GSet::new::<Vec<MyProto>>(vec![
+            MyProto {
+                value: "hello".to_string(),
+            },
+            MyProto {
+                value: "whimper".to_string(),
+            },
+        ]);
+
+        let c = <GSet as GSetExt<MyProto>>::merge(&a, &b).unwrap();
+        assert!(c.contains(&MyProto {
+            value: "bang".to_string()
+        }));
+        assert!(c.contains(&MyProto {
+            value: "hello".to_string()
+        }));
+        assert!(c.contains(&MyProto {
+            value: "whimper".to_string()
+        }));
+
+        assert_eq!(3, <GSet as GSetExt<MyProto>>::len(&c));
     }
 }
