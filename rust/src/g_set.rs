@@ -93,7 +93,7 @@ mod tests {
         use super::*;
         use pb::GSet;
 
-        let mut a: <GSet as GSetExt<MyProto>>::T = GSet::new::<Vec<MyProto>>(vec![]);
+        let mut a = GSet::new::<Vec<MyProto>>(vec![]);
 
         a.insert(&MyProto {
             value: "hello world".to_string(),
