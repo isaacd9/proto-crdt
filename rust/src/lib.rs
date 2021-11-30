@@ -43,6 +43,43 @@ pub trait GSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
         B: GSetExt<E>;
 }
 
+pub trait TwoPhaseSet<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
+    type T;
+
+    fn new<I>(elements: I) -> Self::T
+    where
+        I: IntoIterator<Item = E>;
+
+    fn insert(&mut self, element: &E);
+    fn remove(&mut self, element: &E);
+    fn contains(&self, element: &E) -> bool;
+    fn len(&self) -> usize;
+
+    fn merge<A, B>(a: &A, b: &B) -> Result<Self::T, prost::DecodeError>
+    where
+        A: GSetExt<E>,
+        B: GSetExt<E>;
+}
+
+pub trait OrSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
+    type T;
+
+    fn new<I>(elements: I) -> Self::T
+    where
+        I: IntoIterator<Item = E>;
+
+    fn insert(&mut self, element: &E);
+    fn remove(&mut self, element: &E);
+    fn contains(&self, element: &E) -> bool;
+    fn len(&self) -> usize;
+
+    fn merge<A, B>(a: &A, b: &B) -> Result<Self::T, prost::DecodeError>
+    where
+        A: GSetExt<E>,
+        B: GSetExt<E>;
+}
+
 pub mod g_counter;
 pub mod g_set;
 pub mod pn_counter;
+pub mod two_phase_set;
