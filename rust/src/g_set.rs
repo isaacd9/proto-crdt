@@ -91,12 +91,18 @@ mod tests {
 
         let mut a = GSet::new::<Vec<MyProto>>(vec![]);
 
+        // Idempotent inserts
+        a.insert(&MyProto {
+            value: "hello world".to_string(),
+        });
         a.insert(&MyProto {
             value: "hello world".to_string(),
         });
 
+        // Len
         assert_eq!(1, <GSet as GSetExt<MyProto>>::len(&a));
 
+        // Contains
         assert!(a.contains(&MyProto {
             value: "hello world".to_string()
         }));
@@ -104,6 +110,7 @@ mod tests {
             value: "bang".to_string()
         }));
 
+        // Insert again
         a.insert(&MyProto {
             value: "bang".to_string(),
         });
@@ -112,6 +119,7 @@ mod tests {
             value: "bang".to_string()
         }));
 
+        // Elements
         let set: HashSet<MyProto> = a.elements().unwrap();
         assert!(set.contains(&MyProto {
             value: "hello world".to_string(),

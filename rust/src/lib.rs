@@ -40,7 +40,7 @@ pub trait GSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
     fn merge(a: &Self::T, b: &Self::T) -> Result<Self::T, prost::DecodeError>;
 }
 
-pub trait TwoPhaseSet<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
+pub trait TwoPhaseSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
     type T;
 
     fn new<I>(elements: I) -> Self::T
