@@ -20,7 +20,7 @@ impl GCounterExt for pb::GCounter {
 
     fn value(&self) -> u64 {
         let mut sum = 0;
-        for (_, v) in &self.counts {
+        for v in self.counts.values() {
             sum += v
         }
         sum

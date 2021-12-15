@@ -21,10 +21,10 @@ impl GCounterExt for pb::PnCounter {
 
     fn value(&self) -> u64 {
         let mut sum = 0;
-        for (_, v) in &self.increments {
+        for v in self.increments.values() {
             sum += v
         }
-        for (_, v) in &self.decrements {
+        for v in self.decrements.values() {
             sum -= v
         }
         sum
