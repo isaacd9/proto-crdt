@@ -81,20 +81,20 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> TwoPhaseSetExt<E
         Ok(s)
     }
 
-    fn merge(a: Self::T, b: Self::T) -> Result<Self::T, prost::DecodeError> {
+    fn merge(a: &Self::T, b: &Self::T) -> Result<Self::T, prost::DecodeError> {
         let mut c = Self::T::default();
 
         // Added
         for a_el in a
             .added
-            .into_iter()
+            .iter()
             .map(|any| E::decode(Bytes::copy_from_slice(&any.value)))
         {
             c.insert(&a_el?);
         }
         for b_el in b
             .added
-            .into_iter()
+            .iter()
             .map(|any| E::decode(Bytes::copy_from_slice(&any.value)))
         {
             c.insert(&b_el?);
@@ -103,14 +103,14 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> TwoPhaseSetExt<E
         // Removed
         for a_el in a
             .removed
-            .into_iter()
+            .iter()
             .map(|any| E::decode(Bytes::copy_from_slice(&any.value)))
         {
             c.remove(&a_el?);
         }
         for b_el in b
             .removed
-            .into_iter()
+            .iter()
             .map(|any| E::decode(Bytes::copy_from_slice(&any.value)))
         {
             c.remove(&b_el?);
@@ -187,5 +187,52 @@ mod tests {
         assert!(set.contains(&MyProto {
             value: "bang".to_string(),
         }));
+    }
+
+    #[test]
+    fn test_merge() {
+        use super::*;
+        use pb::TwoPhaseSet;
+
+        let mut a = TwoPhaseSet::new::<Vec<MyProto>>(vec![
+            MyProto {
+                value: "hello".to_string(),
+            },
+            MyProto {
+                value: "bang".to_string(),
+            },
+            MyProto {
+                value: "foo".to_string(),
+            },
+        ]);
+        let b = TwoPhaseSet::new::<Vec<MyProto>>(vec![
+            MyProto {
+                value: "hello".to_string(),
+            },
+            MyProto {
+                value: "whimper".to_string(),
+            },
+            MyProto {
+                value: "foo".to_string(),
+            },
+        ]);
+
+        a.remove(&MyProto {
+            value: "foo".to_string(),
+        });
+        assert_eq!(2, <TwoPhaseSet as TwoPhaseSetExt<MyProto>>::len(&a));
+
+        let c = <TwoPhaseSet as TwoPhaseSetExt<MyProto>>::merge(&a, &b).unwrap();
+        assert!(c.contains(&MyProto {
+            value: "bang".to_string()
+        }));
+        assert!(c.contains(&MyProto {
+            value: "hello".to_string()
+        }));
+        assert!(c.contains(&MyProto {
+            value: "whimper".to_string()
+        }));
+
+        assert_eq!(3, <TwoPhaseSet as TwoPhaseSetExt<MyProto>>::len(&c));
     }
 }

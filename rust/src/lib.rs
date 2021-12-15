@@ -54,7 +54,7 @@ pub trait TwoPhaseSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Ha
 
     fn elements(&self) -> Result<HashSet<E>, prost::DecodeError>;
 
-    fn merge(a: Self::T, b: Self::T) -> Result<Self::T, prost::DecodeError>;
+    fn merge(a: &Self::T, b: &Self::T) -> Result<Self::T, prost::DecodeError>;
 }
 
 pub trait OrSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
