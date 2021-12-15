@@ -14,7 +14,7 @@ pub trait GCounterExt {
     fn merge(id: &'static str, a: &Self::T, b: &Self::T) -> Self::T;
 }
 
-pub trait PNCounterExt {
+pub trait PNCounterExt: GCounterExt {
     type T;
 
     fn decrement(&mut self, n: u64);
@@ -37,10 +37,7 @@ pub trait GSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
 
     fn elements(&self) -> Result<HashSet<E>, prost::DecodeError>;
 
-    fn merge<A, B>(a: &A, b: &B) -> Result<Self::T, prost::DecodeError>
-    where
-        A: GSetExt<E>,
-        B: GSetExt<E>;
+    fn merge(a: &Self::T, b: &Self::T) -> Result<Self::T, prost::DecodeError>;
 }
 
 pub trait TwoPhaseSet<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
@@ -72,10 +69,7 @@ pub trait OrSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
     fn contains(&self, element: &E) -> bool;
     fn len(&self) -> usize;
 
-    fn merge<A, B>(a: &A, b: &B) -> Result<Self::T, prost::DecodeError>
-    where
-        A: GSetExt<E>,
-        B: GSetExt<E>;
+    fn merge<A, B>(a: &Self::T, b: &Self::T) -> Result<Self::T, prost::DecodeError>;
 }
 
 pub mod g_counter;

@@ -54,18 +54,14 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> GSetExt<E> for p
             .collect()
     }
 
-    fn merge<A, B>(a: &A, b: &B) -> Result<Self::T, prost::DecodeError>
-    where
-        A: GSetExt<E>,
-        B: GSetExt<E>,
-    {
+    fn merge(a: &Self::T, b: &Self::T) -> Result<Self::T, prost::DecodeError> {
         let mut c = pb::GSet::default();
 
-        for a_el in a.elements()?.into_iter() {
+        for a_el in <Self::T as GSetExt<E>>::elements(a)?.into_iter() {
             c.insert(&a_el)
         }
 
-        for b_el in b.elements()?.into_iter() {
+        for b_el in <Self::T as GSetExt<E>>::elements(b)?.into_iter() {
             c.insert(&b_el)
         }
 
