@@ -80,3 +80,4 @@ pub mod g_counter;
 pub mod g_set;
 pub mod pn_counter;
 pub mod two_phase_set;
+pub mod or_set;
