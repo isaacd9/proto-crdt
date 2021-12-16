@@ -47,6 +47,10 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> GSetExt<E> for p
         self.elements.len()
     }
 
+    fn is_empty(&self) -> bool {
+        self.elements.is_empty()
+    }
+
     fn elements(&self) -> Result<HashSet<E>, prost::DecodeError> {
         self.elements
             .iter()

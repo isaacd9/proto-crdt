@@ -34,6 +34,7 @@ pub trait GSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
     fn insert(&mut self, element: &E);
     fn contains(&self, element: &E) -> bool;
     fn len(&self) -> usize;
+    fn is_empty(&self) -> bool;
 
     fn elements(&self) -> Result<HashSet<E>, prost::DecodeError>;
 
@@ -51,6 +52,7 @@ pub trait TwoPhaseSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Ha
     fn remove(&mut self, element: &E);
     fn contains(&self, element: &E) -> bool;
     fn len(&self) -> usize;
+    fn is_empty(&self) -> bool;
 
     fn elements(&self) -> Result<HashSet<E>, prost::DecodeError>;
 
@@ -68,6 +70,8 @@ pub trait OrSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
     fn remove(&mut self, element: &E);
     fn contains(&self, element: &E) -> bool;
     fn len(&self) -> usize;
+
+    fn is_empty(&self) -> bool;
 
     fn merge<A, B>(a: &Self::T, b: &Self::T) -> Result<Self::T, prost::DecodeError>;
 }

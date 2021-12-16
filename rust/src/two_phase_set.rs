@@ -60,6 +60,10 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> TwoPhaseSetExt<E
         self.added.len() - self.removed.len()
     }
 
+    fn is_empty(&self) -> bool {
+        self.added.len() - self.removed.len() == 0
+    }
+
     fn elements(&self) -> Result<HashSet<E>, prost::DecodeError> {
         let added_set: Result<HashSet<E>, prost::DecodeError> = self
             .added
