@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package monotonic_counter;
+
+import "g_counter.proto";
+
+option go_package = "github.com/isaacd9/proto-crdt/examples/monotonic_counter/pb";
+
+// Monotonic counter service. Each service counts independently each second and
+// then merges the results of thier counts.
+service Greeter {
+	// Merges counts from another node
+	rpc Merge (MergeRequest) returns (MergeResponse) {}
+	rpc Value (ValueRequest) returns (ValueResponse) {}
+}
+
+// The request message containing the user's name
+message MergeRequest {
+	pb_crdt.v1.GCounter counter = 1;
+	// Next: 2
+}
+
+// The response message containing the greetings
+message MergeResponse {}
+
+// Request for the current value
+message ValueRequest {}
+
+// Returns the current value
+message ValueResponse {
+	uint64 value = 1;
+
+	// Next: 2
+}
