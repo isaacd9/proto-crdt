@@ -8,9 +8,9 @@ option go_package = "github.com/isaacd9/proto-crdt/examples/monotonic_counter/pb
 
 // Monotonic counter service. Each service counts independently each second and
 // then merges the results of thier counts.
-service Greeter {
+service Counter {
 	// Merges counts from another node
-	rpc Merge (MergeRequest) returns (MergeResponse) {}
+	rpc Peer (stream MergeRequest) returns (stream MergeResponse) {}
 	rpc Value (ValueRequest) returns (ValueResponse) {}
 }
 

@@ -9,4 +9,4 @@ test:
 	cd go && go test ./... -v
 
 monotonic_counter:
-	protoc -I=proto/v1 -I=examples/monotonic_counter --go_out=examples/monotonic_counter/pb --go_opt=module=github.com/isaacd9/proto-crdt/examples/monotonic_counter examples/monotonic_counter/*.proto
+	protoc -I=proto/v1 -I=examples/monotonic_counter --go-grpc_opt=paths=source_relative --go-grpc_out=examples/monotonic_counter/pb --go_out=examples/monotonic_counter --go_opt=module=github.com/isaacd9/proto-crdt/examples/monotonic_counter examples/monotonic_counter/*.proto
