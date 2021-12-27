@@ -22,6 +22,8 @@ var (
 	addr       = flag.String("addr", ":8080", "address to listen on")
 	peer       = flag.String("peers", "", "peer list as a comma seperated list of strings. If not provided, assume bootstrap")
 	identifier = flag.String("identifier", "", "identifier for this host. default is addr")
+	initial    = flag.Uint64("init", 0, "initial value")
+	tick       = flag.Duration("tick", 1*time.Second, "duration between ticks")
 )
 
 func getPeers(peerSt string) []string {
@@ -42,7 +44,7 @@ type Counter struct {
 	sync.Mutex
 }
 
-func NewCounter(id string, peers []string) *Counter {
+func NewCounter(id string, initial uint64, peers []string) *Counter {
 	peerClients := make([]pb.CounterClient, len(peers))
 	for i, peer := range peers {
 		conn, err := grpc.Dial(peer, grpc.WithInsecure())
@@ -52,10 +54,13 @@ func NewCounter(id string, peers []string) *Counter {
 		peerClients[i] = pb.NewCounterClient(conn)
 	}
 
+	gcounter := g_counter.New(id)
+	g_counter.Increment(gcounter, initial)
+
 	return &Counter{
 		Id:          id,
 		peerClients: peerClients,
-		counter:     g_counter.New(id),
+		counter:     gcounter,
 	}
 }
 
@@ -79,7 +84,7 @@ func (c *Counter) Peer(s pb.Counter_PeerServer) error {
 			select {
 			case msg := <-msgCh:
 				c.Lock()
-				log.Printf("recv: %+v", msg)
+				// log.Printf("recv from call: %+v. us: %+v", msg, c.counter)
 				c.counter = g_counter.Merge(c.Id, msg.Counter, c.counter)
 				s.Send(&pb.MergeResponse{
 					Counter: c.counter,
@@ -130,6 +135,7 @@ func (c *Counter) Tick(ctx context.Context, ticker *time.Ticker) error {
 			select {
 			case <-ticker.C:
 				c.Lock()
+				// log.Printf("value (%+v): %d", c.counter, g_counter.Value(c.counter))
 				log.Printf("value: %d", g_counter.Value(c.counter))
 				g_counter.Increment(c.counter, 1)
 				for _, peer := range peerStreams {
@@ -143,7 +149,7 @@ func (c *Counter) Tick(ctx context.Context, ticker *time.Ticker) error {
 				c.Unlock()
 			case counter := <-recvCh:
 				c.Lock()
-				log.Printf("recv: %+v", counter)
+				// log.Printf("recv from peer: %+v. us: %+v", counter, c.counter)
 				c.counter = g_counter.Merge(c.Id, counter, c.counter)
 				c.Unlock()
 			}
@@ -172,10 +178,10 @@ func main() {
 	}
 
 	peers := getPeers(*peer)
-	c := NewCounter(id, peers)
+	c := NewCounter(id, *initial, peers)
 
 	go func() {
-		if err := c.Tick(context.Background(), time.NewTicker(1*time.Second)); err != nil {
+		if err := c.Tick(context.Background(), time.NewTicker(*tick)); err != nil {
 			log.Fatalf("tick failed: %+v", err)
 		}
 	}()
