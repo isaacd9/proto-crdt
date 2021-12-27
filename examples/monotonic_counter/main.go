@@ -11,6 +11,7 @@ import (
 	"time"
 
 	pb "github.com/isaacd9/proto-crdt/examples/monotonic-counter/pb"
+	"github.com/isaacd9/proto-crdt/examples/monotonic_counter/pb/pb"
 	"github.com/isaacd9/proto-crdt/g_counter"
 	crdt_pb "github.com/isaacd9/proto-crdt/pb/v1"
 	"golang.org/x/sync/errgroup"
@@ -101,7 +102,9 @@ func (c *Counter) Peer(s pb.Counter_PeerServer) error {
 }
 
 func (c *Counter) Value(context.Context, *pb.ValueRequest) (*pb.ValueResponse, error) {
-	return nil, fmt.Errorf("not implemented")
+	return &pb.ValueResponse{
+		value: g_counter.Value(c.counter),
+	}, nil
 }
 
 func (c *Counter) Tick(ctx context.Context, ticker *time.Ticker) error {
