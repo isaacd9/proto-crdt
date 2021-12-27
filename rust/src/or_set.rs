@@ -83,7 +83,7 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> OrSetExt<E> for 
     fn merge<A, B>(a: &Self::T, b: &Self::T) -> Result<Self::T, prost::DecodeError> {
         Ok(Self {
             added: a.added.iter().chain(b.added.iter()).cloned().collect(),
-            removed: a.added.iter().chain(b.added.iter()).cloned().collect(),
+            removed: a.removed.iter().chain(b.removed.iter()).cloned().collect(),
         })
     }
 }
@@ -139,6 +139,50 @@ mod tests {
         });
         assert!(!a.contains(&MyProto {
             value: "hello world".to_string()
+        }));
+    }
+
+    #[test]
+    fn test_merge() {
+        use super::*;
+        use pb::OrSet;
+
+        let mut a = OrSet::new::<Vec<MyProto>>(vec![
+            MyProto {
+                value: "hello".to_string(),
+            },
+            MyProto {
+                value: "bang".to_string(),
+            },
+            MyProto {
+                value: "foo".to_string(),
+            },
+        ]);
+        let b = OrSet::new::<Vec<MyProto>>(vec![
+            MyProto {
+                value: "hello".to_string(),
+            },
+            MyProto {
+                value: "whimper".to_string(),
+            },
+            MyProto {
+                value: "foo".to_string(),
+            },
+        ]);
+
+        a.remove(&MyProto {
+            value: "foo".to_string(),
+        });
+
+        let c = <OrSet as OrSetExt<MyProto>>::merge::<OrSet, OrSet>(&a, &b).unwrap();
+        assert!(c.contains(&MyProto {
+            value: "bang".to_string()
+        }));
+        assert!(c.contains(&MyProto {
+            value: "hello".to_string()
+        }));
+        assert!(c.contains(&MyProto {
+            value: "whimper".to_string()
         }));
     }
 }
