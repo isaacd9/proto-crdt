@@ -69,15 +69,12 @@ pub trait OrSetExt<E: prost::Message + ProstMessageExt + Default + Eq + Hash> {
     fn insert(&mut self, element: &E);
     fn remove(&mut self, element: &E);
     fn contains(&self, element: &E) -> bool;
-    fn len(&self) -> usize;
-
-    fn is_empty(&self) -> bool;
 
     fn merge<A, B>(a: &Self::T, b: &Self::T) -> Result<Self::T, prost::DecodeError>;
 }
 
 pub mod g_counter;
 pub mod g_set;
+pub mod or_set;
 pub mod pn_counter;
 pub mod two_phase_set;
-pub mod or_set;
