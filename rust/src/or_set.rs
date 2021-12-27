@@ -1,8 +1,5 @@
 use crate::{pb, OrSetExt, ProstMessageExt};
-use std::{
-    collections::{HashSet},
-    hash::Hash,
-};
+use std::{collections::HashSet, hash::Hash};
 use uuid::Uuid;
 
 impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> OrSetExt<E> for pb::OrSet {
@@ -88,5 +85,60 @@ impl<E: prost::Message + ProstMessageExt + Default + Eq + Hash> OrSetExt<E> for 
             added: a.added.iter().chain(b.added.iter()).cloned().collect(),
             removed: a.added.iter().chain(b.added.iter()).cloned().collect(),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[derive(Hash, Clone, PartialEq, Eq, ::prost::Message)]
+    pub struct MyProto {
+        /// Identifier is a unique identifier for this replica
+        #[prost(string, tag = "1")]
+        pub value: ::prost::alloc::string::String,
+    }
+
+    impl crate::ProstMessageExt for MyProto {
+        fn type_url() -> String {
+            "type".to_string()
+        }
+    }
+
+    #[test]
+    fn test_or_set() {
+        use super::*;
+        use pb::OrSet;
+
+        let mut a = OrSet::new::<Vec<MyProto>>(vec![]);
+        // Idempotent inserts
+        a.insert(&MyProto {
+            value: "hello world".to_string(),
+        });
+        a.insert(&MyProto {
+            value: "hello world".to_string(),
+        });
+
+        // Contains
+        assert!(a.contains(&MyProto {
+            value: "hello world".to_string()
+        }));
+        assert!(!a.contains(&MyProto {
+            value: "bang".to_string()
+        }));
+
+        // Insert again
+        a.insert(&MyProto {
+            value: "bang".to_string(),
+        });
+        assert!(a.contains(&MyProto {
+            value: "bang".to_string()
+        }));
+
+        // Remove
+        a.remove(&MyProto {
+            value: "hello world".to_string(),
+        });
+        assert!(!a.contains(&MyProto {
+            value: "hello world".to_string()
+        }));
     }
 }
