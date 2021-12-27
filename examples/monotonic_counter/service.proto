@@ -14,14 +14,17 @@ service Counter {
 	rpc Value (ValueRequest) returns (ValueResponse) {}
 }
 
-// The request message containing the user's name
+// The request message containing the newly ticked value
 message MergeRequest {
 	pb_crdt.v1.GCounter counter = 1;
 	// Next: 2
 }
 
-// The response message containing the greetings
-message MergeResponse {}
+// The response message containing the new agreed value
+message MergeResponse {
+	pb_crdt.v1.GCounter counter = 1;
+	// Next: 2
+}
 
 // Request for the current value
 message ValueRequest {}

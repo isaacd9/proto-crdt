@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -23,17 +24,42 @@ var (
 	identifier = flag.String("identifier", "", "identifier for this host. default is addr")
 )
 
-type counter struct {
-	id string
-
-	pb.CounterServer
-	stopCh chan interface{}
-
-	sync.Mutex
-	counter *crdt_pb.GCounter
+func getPeers(peerSt string) []string {
+	if peerSt == "" {
+		return []string{}
+	}
+	return strings.Split(peerSt, ",")
 }
 
-func (c *counter) Peer(s pb.Counter_PeerServer) error {
+type Counter struct {
+	Id string
+
+	pb.CounterServer
+	stopCh      chan interface{}
+	counter     *crdt_pb.GCounter
+	peerClients []pb.CounterClient
+
+	sync.Mutex
+}
+
+func NewCounter(id string, peers []string) *Counter {
+	peerClients := make([]pb.CounterClient, len(peers))
+	for i, peer := range peers {
+		conn, err := grpc.Dial(peer, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("failed to create peer client %q: %v", peer, err)
+		}
+		peerClients[i] = pb.NewCounterClient(conn)
+	}
+
+	return &Counter{
+		Id:          id,
+		peerClients: peerClients,
+		counter:     g_counter.New(id),
+	}
+}
+
+func (c *Counter) Peer(s pb.Counter_PeerServer) error {
 	g, ctx := errgroup.WithContext(s.Context())
 
 	msgCh := make(chan *pb.MergeRequest)
@@ -52,7 +78,13 @@ func (c *counter) Peer(s pb.Counter_PeerServer) error {
 		for {
 			select {
 			case msg := <-msgCh:
-				c.counter = g_counter.Merge(c.id, msg.Counter, c.counter)
+				c.Lock()
+				log.Printf("recv: %+v", msg)
+				c.counter = g_counter.Merge(c.Id, msg.Counter, c.counter)
+				s.Send(&pb.MergeResponse{
+					Counter: c.counter,
+				})
+				c.Unlock()
 			case <-ctx.Done():
 				return nil
 			}
@@ -63,25 +95,65 @@ func (c *counter) Peer(s pb.Counter_PeerServer) error {
 	return g.Wait()
 }
 
-func (c *counter) Value(context.Context, *pb.ValueRequest) (*pb.ValueResponse, error) {
+func (c *Counter) Value(context.Context, *pb.ValueRequest) (*pb.ValueResponse, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (c *counter) Tick(ticker *time.Ticker) error {
-	for {
-		log.Printf("value: %d", g_counter.Value(c.counter))
-		select {
-		case <-ticker.C:
-			c.Lock()
-			g_counter.Increment(c.counter, 1)
-			c.Unlock()
-		case <-c.stopCh:
-			return nil
+func (c *Counter) Tick(ctx context.Context, ticker *time.Ticker) error {
+	g, ctx := errgroup.WithContext(ctx)
+
+	var (
+		recvCh = make(chan *crdt_pb.GCounter)
+	)
+
+	peerStreams := make([]pb.Counter_PeerClient, len(c.peerClients))
+	for i, client := range c.peerClients {
+		stream, err := client.Peer(ctx)
+		if err != nil {
+			return err
 		}
+		peerStreams[i] = stream
+
+		g.Go(func() error {
+			for {
+				msg, err := stream.Recv()
+				if err != nil {
+					return err
+				}
+				recvCh <- msg.Counter
+			}
+		})
 	}
+
+	g.Go(func() error {
+		for {
+			select {
+			case <-ticker.C:
+				c.Lock()
+				log.Printf("value: %d", g_counter.Value(c.counter))
+				g_counter.Increment(c.counter, 1)
+				for _, peer := range peerStreams {
+					err := peer.Send(&pb.MergeRequest{
+						Counter: c.counter,
+					})
+					if err != nil {
+						return err
+					}
+				}
+				c.Unlock()
+			case counter := <-recvCh:
+				c.Lock()
+				log.Printf("recv: %+v", counter)
+				c.counter = g_counter.Merge(c.Id, counter, c.counter)
+				c.Unlock()
+			}
+		}
+	})
+
+	return g.Wait()
 }
 
-func (c *counter) Stop() {
+func (c *Counter) Stop() {
 	c.stopCh <- struct{}{}
 }
 
@@ -99,16 +171,16 @@ func main() {
 		id = *addr
 	}
 
-	c := counter{
-		counter: g_counter.New(id),
-		id:      id,
-	}
+	peers := getPeers(*peer)
+	c := NewCounter(id, peers)
 
 	go func() {
-		c.Tick(time.NewTicker(1 * time.Second))
+		if err := c.Tick(context.Background(), time.NewTicker(1*time.Second)); err != nil {
+			log.Fatalf("tick failed: %+v", err)
+		}
 	}()
 
-	pb.RegisterCounterServer(grpcServer, &c)
+	pb.RegisterCounterServer(grpcServer, c)
 
 	log.Printf("starting server on %q", *addr)
 	grpcServer.Serve(lis)
