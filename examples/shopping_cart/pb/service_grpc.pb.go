@@ -25,6 +25,7 @@ type ShoppingCartClient interface {
 	// User interface
 	Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*AddResponse, error)
 	Remove(ctx context.Context, in *RemoveRequest, opts ...grpc.CallOption) (*RemoveResponse, error)
+	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	// Replication API
 	UpdateCart(ctx context.Context, in *CartRequest, opts ...grpc.CallOption) (*CartResponse, error)
 }
@@ -55,6 +56,15 @@ func (c *shoppingCartClient) Remove(ctx context.Context, in *RemoveRequest, opts
 	return out, nil
 }
 
+func (c *shoppingCartClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+	out := new(GetResponse)
+	err := c.cc.Invoke(ctx, "/shopping_cart.ShoppingCart/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *shoppingCartClient) UpdateCart(ctx context.Context, in *CartRequest, opts ...grpc.CallOption) (*CartResponse, error) {
 	out := new(CartResponse)
 	err := c.cc.Invoke(ctx, "/shopping_cart.ShoppingCart/UpdateCart", in, out, opts...)
@@ -71,6 +81,7 @@ type ShoppingCartServer interface {
 	// User interface
 	Add(context.Context, *AddRequest) (*AddResponse, error)
 	Remove(context.Context, *RemoveRequest) (*RemoveResponse, error)
+	Get(context.Context, *GetRequest) (*GetResponse, error)
 	// Replication API
 	UpdateCart(context.Context, *CartRequest) (*CartResponse, error)
 	mustEmbedUnimplementedShoppingCartServer()
@@ -85,6 +96,9 @@ func (UnimplementedShoppingCartServer) Add(context.Context, *AddRequest) (*AddRe
 }
 func (UnimplementedShoppingCartServer) Remove(context.Context, *RemoveRequest) (*RemoveResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Remove not implemented")
+}
+func (UnimplementedShoppingCartServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
 func (UnimplementedShoppingCartServer) UpdateCart(context.Context, *CartRequest) (*CartResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCart not implemented")
@@ -138,6 +152,24 @@ func _ShoppingCart_Remove_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ShoppingCart_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ShoppingCartServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/shopping_cart.ShoppingCart/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ShoppingCartServer).Get(ctx, req.(*GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ShoppingCart_UpdateCart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CartRequest)
 	if err := dec(in); err != nil {
@@ -170,6 +202,10 @@ var ShoppingCart_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Remove",
 			Handler:    _ShoppingCart_Remove_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _ShoppingCart_Get_Handler,
 		},
 		{
 			MethodName: "UpdateCart",

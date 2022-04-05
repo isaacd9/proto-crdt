@@ -23,14 +23,19 @@ service ShoppingCart {
 	// User interface
 	rpc Add (AddRequest) returns (AddResponse) {}
 	rpc Remove (RemoveRequest) returns (RemoveResponse) {}
+	rpc Get(GetRequest) returns (GetResponse) {}
 
 	// Replication API
 	rpc UpdateCart(CartRequest) returns (CartResponse) {}
 }
 
+message CartItem {
+	uint64 quantity = 1;
+	string name = 2;
+}
+
 message AddRequest {
-	uint64 quanity = 1;
-	string item = 2;
+	CartItem item = 1;
 	// Next: 2
 }
 
@@ -45,6 +50,15 @@ message RemoveRequest {
 
 message RemoveResponse {
 	// Next: 1
+}
+
+message GetRequest {
+	// Next: 1
+}
+
+message GetResponse {
+	repeated CartItem items = 1;
+	// Next: 2
 }
 
 message CartRequest {
